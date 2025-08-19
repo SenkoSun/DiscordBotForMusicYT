@@ -52,7 +52,11 @@ async def stop(ctx):
     else:
         await ctx.send("Бот не в голосовом канале!")
 
+@bot.command()
+async def start(ctx):
+    await ctx.send("Привет!\n" \
+                   "Я бот для музыки из ВК!")
 
-bot.run(BOT_TOKEN)
+
 if __name__ == '__main__':
     bot.run(BOT_TOKEN)
