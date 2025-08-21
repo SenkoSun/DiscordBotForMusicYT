@@ -12,11 +12,12 @@ intents.voice_states = True
 bot = commands.Bot(command_prefix='/', intents=intents) 
 
 
+
 @bot.event
 async def on_ready():
     try:
         synced = await bot.tree.sync()
-        print(f"Синхронизировано {len(synced)} команд")
+        # print(f"Синхронизировано {len(synced)} команд")
     except Exception as e:
         print(f"Ошибка синхронизации: {e}")
 
