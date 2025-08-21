@@ -40,13 +40,16 @@ async def play(interaction: discord.Interaction, url: str):
     await interaction.response.defer(thinking=True)
     try:
         info = await get_audio_stream_url(url)
-        audio_source = discord.FFmpegPCMAudio(info['url'])
+        audio_source = discord.FFmpegPCMAudio(
+            info['url'],
+            before_options='-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
+            options='-vn -b:a 256k -bufsize 512k'
+        )
         
         if not audio_source.is_opus():
             audio_source = discord.PCMVolumeTransformer(audio_source)
         
         voice_client.play(audio_source, after=lambda e: print(f'Ошибка: {e}') if e else None)
-        audio_source = discord.FFmpegPCMAudio(url)
 
         embed = discord.Embed(
             color = 0xFF0000,
@@ -58,7 +61,7 @@ async def play(interaction: discord.Interaction, url: str):
 
         embed.add_field(name="Длительность", value = f"{info['duration_string']}", inline=False)
 
-        embed.set_thumbnail(url = info['thumbnail'])
+        embed.set_thumbnail(url = info['thumbnails'][-1]['url'])
 
         await interaction.followup.send(embed=embed)
             
