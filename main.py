@@ -27,7 +27,7 @@ async def play(interaction: discord.Interaction, url: str):
     """Воспроизводит аудио из прямого URL-потока"""
     
     if not interaction.user.voice:
-        return await interaction.followup.send("Вы не в голосовом канале!", delete_after=5.0)
+        return await interaction.followup.send("Вы не в голосовом канале!", delete_after=5.0, ephemeral=True)
     
     voice_client = interaction.guild.voice_client
     
@@ -66,10 +66,10 @@ async def play(interaction: discord.Interaction, url: str):
         await interaction.followup.send(embed=embed)
             
     except Exception as e:
-        await interaction.followup.send(f"Ошибка: {str(e)}")
+        await interaction.followup.send(f"Ошибка: {str(e)}", ephemeral=True)
 
 
-@bot.tree.command(name="stop", description="Остановка воспроизведения")
+@bot.tree.command(name="stop", description="Остановка воспроизведения и очистка очереди")
 async def stop(interaction: discord.Interaction):
     voice_client = interaction.guild.voice_client
     if voice_client:
@@ -77,12 +77,40 @@ async def stop(interaction: discord.Interaction):
         await voice_client.disconnect()
         await interaction.response.send_message("⏹️ Воспроизведение остановлено.", delete_after=5.0)
     else:
-        await interaction.response.send_message("Бот не в голосовом канале!", delete_after=5.0)
+        await interaction.response.send_message("Бот не в голосовом канале!", delete_after=5.0, ephemeral=True)
 
-@bot.tree.command(name="start", description="Стартовое сообщение")
+    
+@bot.tree.command(name="pause", description="Пауза/снятие с паузы")
+async def start(interaction: discord.Interaction):
+    
+    if not interaction.user.voice:
+        return await interaction.response.send_message("Вы не в голосовом канале!", delete_after=5.0, ephemeral=True)
+    
+    voice_client = interaction.guild.voice_client
+
+    if voice_client.is_paused():
+        voice_client.resume()
+        await interaction.response.send_message("▶️ Пауза снята", delete_after=5.0)
+        return
+
+    if not voice_client.is_playing():
+        await interaction.response.send_message("Сейчас ничего не играет!", delete_after=5.0, ephemeral=True)
+        return
+
+    voice_client.pause()
+    await interaction.response.send_message("⏸️ Пауза поставлена", delete_after=5.0)
+    
+
+    if not voice_client:
+        voice_client = await interaction.user.voice.channel.connect()
+    elif voice_client.channel != interaction.user.voice.channel:
+        await voice_client.move_to(interaction.user.voice.channel)
+    
+@bot.tree.command(name="info", description="Техническая информация о боте")
 async def start(interaction: discord.Interaction):
     await interaction.response.send_message("Привет!\n" \
                    "Я бот для музыки из ВК!")
+    
 
 if __name__ == '__main__':
     bot.run(BOT_TOKEN)
