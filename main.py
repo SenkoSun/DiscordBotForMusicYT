@@ -82,35 +82,69 @@ async def play(interaction: discord.Interaction, url: str):
         await interaction.followup.send(embed=embed)
 
         if not voice_client.is_playing():
-            track = queue.pop()
-            audio_source = discord.FFmpegPCMAudio(
-                track.audio,
-                before_options='-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
-                options='-vn -b:a 256k -bufsize 512k'
-            )
-            if not audio_source.is_opus():
-                audio_source = discord.PCMVolumeTransformer(audio_source)
+            await play_next(interaction)
+        # if not voice_client.is_playing():
+        #     track = queue.pop()
+        #     audio_source = discord.FFmpegPCMAudio(
+        #         track.audio,
+        #         before_options='-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
+        #         options='-vn -b:a 256k -bufsize 512k'
+        #     )
+        #     if not audio_source.is_opus():
+        #         audio_source = discord.PCMVolumeTransformer(audio_source)
 
             
-            voice_client.play(audio_source, after=lambda e: print(f'Ошибка: {e}') if e else None)
+        #     voice_client.play(audio_source, after=lambda e: asyncio.run_coroutine_threadsafe(
+        #                 play_next(e), 
+        #                 bot.loop
+        #             ))
             
     except Exception as e:
         await interaction.response.send_message(f"Ошибка: {str(e)}", ephemeral=True,  delete_after=5.0)
 
+
+async def play_next(interaction: discord.Interaction):
+    voice_client = interaction.guild.voice_client
+    queue = get_queue(interaction.guild.id)
+
+    if len(queue) == 0:
+        return
+    
+    # await interaction.response.defer(thinking=True)
+    if not voice_client.is_playing():
+        track = queue.pop()
+        audio_source = discord.FFmpegPCMAudio(
+            track.audio,
+            before_options='-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
+            options='-vn -b:a 256k -bufsize 512k'
+        )
+    if not audio_source.is_opus():
+        audio_source = discord.PCMVolumeTransformer(audio_source)
+
+    
+    voice_client.play(audio_source, after=lambda x: asyncio.run_coroutine_threadsafe(
+                play_next(interaction), 
+                bot.loop
+            ))
+
+
 @bot.tree.command(name="queue", description="Вывод очереди")
 async def queue(interaction: discord.Interaction):
-        embed = discord.Embed(
-            title = "**Очередь**",
-        )
-        
-        queue = get_queue(interaction.guild.id)
-        for i in range(len(queue)):
-            if i == 0:
-                embed.add_field(name="", value = f"**{i + 1}. {queue[i].channel} - {queue[i].title}**" , inline=False)
-            else:
-                embed.add_field(name="", value = f"{i + 1}. {queue[i].channel} - {queue[i].title}" , inline=False)
+    embed = discord.Embed(
+        title = "**Очередь**",
+    )
+    
+    queue = get_queue(interaction.guild.id)
+    for i in range(len(queue) - 1, -1, -1):
+        if i == 0:
+            embed.add_field(name="", value = f"**{len(queue) - i}. {queue[i].channel} - {queue[i].title}**" , inline=False)
+        else:
+            embed.add_field(name="", value = f"{len(queue) - i}. {queue[i].channel} - {queue[i].title}" , inline=False)
 
-        await interaction.response.send_message(embed=embed, ephemeral = True)
+    if len(queue) == 0:
+        embed.add_field(name="", value = f"Тут ничего нет 🍃" , inline=False)
+
+    await interaction.response.send_message(embed=embed, ephemeral = True)
 
 
 @bot.tree.command(name="stop", description="Остановка воспроизведения и очистка очереди")
