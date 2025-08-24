@@ -108,14 +108,14 @@ async def stop(interaction: discord.Interaction):
         await voice_client.disconnect()
         await interaction.response.send_message("⏹️ Воспроизведение остановлено.", delete_after=5.0)
     else:
-        await interaction.response.send_message("Бот не в голосовом канале!", ephemeral=True)
+        await interaction.response.send_message("Бот не в голосовом канале!", ephemeral=True, delete_after=5.0)
 
     
 @bot.tree.command(name="pause", description="Пауза/снятие с паузы")
 async def start(interaction: discord.Interaction):
     
     if not interaction.user.voice:
-        await interaction.response.send_message("Вы не в голосовом канале!", ephemeral=True)
+        await interaction.response.send_message("Вы не в голосовом канале!", ephemeral=True, delete_after=5.0)
         return 
     
     voice_client = interaction.guild.voice_client
@@ -126,7 +126,7 @@ async def start(interaction: discord.Interaction):
         return
 
     if not voice_client.is_playing():
-        await interaction.response.send_message("Сейчас ничего не играет!", ephemeral=True)
+        await interaction.response.send_message("Сейчас ничего не играет!", ephemeral=True, delete_after=5.0)
         return
 
     voice_client.pause()
@@ -137,6 +137,18 @@ async def start(interaction: discord.Interaction):
         voice_client = await interaction.user.voice.channel.connect()
     elif voice_client.channel != interaction.user.voice.channel:
         await voice_client.move_to(interaction.user.voice.channel)
+
+
+@bot.tree.command(name="leave", description="Выход из голосового чата")
+async def stop(interaction: discord.Interaction):
+    voice_client = interaction.guild.voice_client
+    if voice_client:
+        voice_client.stop()
+        await voice_client.disconnect()
+        await interaction.response.send_message("👋", delete_after=5.0)
+    else:
+        await interaction.response.send_message("Бот не в голосовом канале!", ephemeral=True, delete_after=5.0)
+                                                
     
 @bot.tree.command(name="info", description="Техническая информация о боте")
 async def start(interaction: discord.Interaction):
