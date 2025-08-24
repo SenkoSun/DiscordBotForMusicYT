@@ -3,7 +3,7 @@ Discord Music Bot for YouTube
 
 Description: A feature-rich Discord music bot that seamlessly streams audio from YouTube, offering high-quality music playback with an intuitive interface and powerful queue management system. Perfect for enhancing Discord servers.
 
-Key Features:
+Key Features:📌
 
 🎵 YouTube Integration
 — Stream audio directly from YouTube videos and playlists.
