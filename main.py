@@ -36,7 +36,7 @@ class Track():
 async def on_ready():
     try:
         synced = await bot.tree.sync()
-        print(f"Синхронизировано {len(synced)} команд")
+        # print(f"Синхронизировано {len(synced)} команд")
     except Exception as e:
         print(f"Ошибка синхронизации: {e}")
 
@@ -65,7 +65,7 @@ async def play(interaction: discord.Interaction, url: str):
         info = await get_audio_stream_url(url)
         queue = get_queue(interaction.guild.id)
 
-        if (len(info) == 0):
+        if (len(info) == 1):
             info = info[0]
             queue.appendleft(Track(info))
 
