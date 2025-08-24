@@ -6,7 +6,7 @@ from discord import app_commands
 from discord.ext import commands
 from music import get_audio_stream_url
 from collections import deque
-
+import random
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -22,8 +22,8 @@ def get_queue(guild_id) -> deque:
 
 
 class Track():
-     def __init__(self, info, url):
-        self.url = url
+     def __init__(self, info):
+        self.url = info['webpage_url']
         self.audio = info['url']
         self.title = info['title']
         self.channel = info['channel']
@@ -63,41 +63,44 @@ async def play(interaction: discord.Interaction, url: str):
         await interaction.response.defer(thinking=True)
 
         info = await get_audio_stream_url(url)
-
         queue = get_queue(interaction.guild.id)
-        queue.appendleft(Track(info, url))
 
-        track = Track(info, url)
-        embed = discord.Embed(
-            color = 0xFF0000,
-            title = track.title,
-            description= track.channel,
-            url = track.url
-        )
-        
-        embed.set_author(name="Трек добавлен!")
-        embed.add_field(name="Длительность", value = track.time , inline=False)
-        embed.set_thumbnail(url = track.image)
+        if (len(info) == 0):
+            info = info[0]
+            queue.appendleft(Track(info))
+
+            track = Track(info)
+            embed = discord.Embed(
+                color = 0xFF0000,
+                title = track.title,
+                description= track.channel,
+                url = track.url
+            )
+            
+            embed.set_author(name="Трек добавлен!")
+            embed.add_field(name="Длительность", value = track.time , inline=False)
+            embed.set_thumbnail(url = track.image)
+
+        else:
+            for i in info[:-1]:
+                queue.appendleft(Track(i))
+            
+            track = info[-1]
+            embed = discord.Embed(
+                color = 0xFF0000,
+                title = track['title'],
+                description= track['uploader'],
+                url = track['webpage_url']
+            )
+            
+            embed.set_author(name="Плэйлист добавлен!")
+            embed.add_field(name="Количество трэкоов", value = f"{track['playlist_count']}" , inline=False)
+            embed.set_thumbnail(url = track['thumbnail'])
 
         await interaction.followup.send(embed=embed)
 
         if not voice_client.is_playing():
             await play_next(interaction)
-        # if not voice_client.is_playing():
-        #     track = queue.pop()
-        #     audio_source = discord.FFmpegPCMAudio(
-        #         track.audio,
-        #         before_options='-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
-        #         options='-vn -b:a 256k -bufsize 512k'
-        #     )
-        #     if not audio_source.is_opus():
-        #         audio_source = discord.PCMVolumeTransformer(audio_source)
-
-            
-        #     voice_client.play(audio_source, after=lambda e: asyncio.run_coroutine_threadsafe(
-        #                 play_next(e), 
-        #                 bot.loop
-        #             ))
             
     except Exception as e:
         await interaction.response.send_message(f"Ошибка: {str(e)}", ephemeral=True,  delete_after=5.0)
@@ -135,8 +138,8 @@ async def queue(interaction: discord.Interaction):
     )
     
     queue = get_queue(interaction.guild.id)
-    for i in range(len(queue) - 1, -1, -1):
-        if i == 0:
+    for i in range(min(len(queue) - 1, 25), -1, -1):
+        if i == len(queue) - 1:
             embed.add_field(name="", value = f"**{len(queue) - i}. {queue[i].channel} - {queue[i].title}**" , inline=False)
         else:
             embed.add_field(name="", value = f"{len(queue) - i}. {queue[i].channel} - {queue[i].title}" , inline=False)
@@ -145,6 +148,13 @@ async def queue(interaction: discord.Interaction):
         embed.add_field(name="", value = f"Тут ничего нет 🍃" , inline=False)
 
     await interaction.response.send_message(embed=embed, ephemeral = True)
+
+@bot.tree.command(name="shuffle", description="Перемешивание очереди")
+async def shuffle(interaction: discord.Interaction):
+    queue = get_queue(interaction.guild.id)
+    queue = deque(random.sample(list(queue), len(queue)))
+    servers[interaction.guild_id] = queue
+    await interaction.response.send_message("Очередь перемешана!", ephemeral = True, delete_after=5)
 
 
 @bot.tree.command(name="stop", description="Остановка воспроизведения и очистка очереди")

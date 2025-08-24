@@ -20,9 +20,9 @@ async def get_audio_stream_url(youtube_url, max_retries=3):
                 'format': 'bestaudio/best',
                 'outtmpl': '%(extractor)s-%(id)s-%(title)s.%(ext)s',
                 'restrictfilenames': True,
-                'noplaylist': True,
+                'noplaylist': False,
                 'nocheckcertificate': True,
-                'ignoreerrors': False,
+                'ignoreerrors': True,
                 'logtostderr': False,
                 'quiet': True,
                 'no_warnings': True,
@@ -50,7 +50,18 @@ async def get_audio_stream_url(youtube_url, max_retries=3):
                     return ydl.extract_info(youtube_url, download=False)
             
             info = await asyncio.to_thread(sync_extract)
-            return info
+            if info and '_type' in info and info['_type'] == 'playlist':
+                # Плейлист - возвращаем все entries
+                return [entry for entry in info.get('entries', []) if entry] \
+                +  [{
+                    'title': info.get('title', 'Без названия'),
+                    'webpage_url': info.get('webpage_url', ''),
+                    'uploader': info.get('uploader', 'Неизвестный автор'),
+                    'thumbnail': info.get('thumbnail', ''),
+                    'playlist_count': len(info.get('entries', []))
+                    }]
+            else:
+                return [info] 
             
         except Exception as e:
             if attempt == max_retries - 1:
