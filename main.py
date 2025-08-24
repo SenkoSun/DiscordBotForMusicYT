@@ -154,7 +154,7 @@ async def shuffle(interaction: discord.Interaction):
     queue = get_queue(interaction.guild.id)
     queue = deque(random.sample(list(queue), len(queue)))
     servers[interaction.guild_id] = queue
-    await interaction.response.send_message("Очередь перемешана!", ephemeral = True, delete_after=5)
+    await interaction.response.send_message("🔀 Очередь перемешана!", ephemeral = True, delete_after=5)
 
 
 @bot.tree.command(name="stop", description="Остановка воспроизведения и очистка очереди")
@@ -166,6 +166,16 @@ async def stop(interaction: discord.Interaction):
         queue.clear()
         await voice_client.disconnect()
         await interaction.response.send_message("⏹️ Воспроизведение остановлено.", delete_after=5.0)
+    else:
+        await interaction.response.send_message("Бот не в голосовом канале!", ephemeral=True, delete_after=5.0)
+
+@bot.tree.command(name="skip", description="Пропуск текущего трека")
+async def stop(interaction: discord.Interaction):
+    voice_client = interaction.guild.voice_client
+    if voice_client:
+        voice_client.stop()
+        await interaction.response.send_message("⏭️ Трэк пропущен.", delete_after=5.0)
+        await play_next(interaction)
     else:
         await interaction.response.send_message("Бот не в голосовом канале!", ephemeral=True, delete_after=5.0)
 
