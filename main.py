@@ -121,14 +121,14 @@ async def play_next(interaction: discord.Interaction):
             before_options='-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
             options='-vn -b:a 256k -bufsize 512k'
         )
-    if not audio_source.is_opus():
-        audio_source = discord.PCMVolumeTransformer(audio_source)
+        if not audio_source.is_opus():
+            audio_source = discord.PCMVolumeTransformer(audio_source)
 
     
-    voice_client.play(audio_source, after=lambda x: asyncio.run_coroutine_threadsafe(
-                play_next(interaction), 
-                bot.loop
-            ))
+        voice_client.play(audio_source, after=lambda x: asyncio.run_coroutine_threadsafe(
+                    play_next(interaction), 
+                    bot.loop
+                ))
 
 
 @bot.tree.command(name="queue", description="Вывод очереди")
@@ -221,8 +221,34 @@ async def leave(interaction: discord.Interaction):
     
 @bot.tree.command(name="info", description="Техническая информация о боте")
 async def info(interaction: discord.Interaction):
-    await interaction.response.send_message("Привет!\n" \
-                   "Я бот для музыки из ВК!")
+    embed = discord.Embed(
+        title="🎵 Музыкальный Бот",
+        description="Бот для воспроизведения музыки с YouTube",
+        color=discord.Color.blue()
+    )
+    
+    embed.add_field(
+        name="🎶 Основные команды",
+        value="""**/play** - Воспроизвести трек или плейлист
+                **/skip** - Пропустить текущий трек  
+                **/stop** - Остановить воспроизведение
+                **/queue** - Показать очередь
+                **/shuffle** - Перемешать очередь""",
+        inline=False
+    )
+    
+    embed.add_field(
+        name="⚙️ Техническая информация",
+        value="""• Поддержка YouTube видео и плейлистов
+                    • Автопереход между треками
+                    • Высокое качество звука
+                    • Стабильное соединение""",
+        inline=False
+    )
+    
+    embed.set_footer(text="Бот разработан .senkosun.")
+    
+    await interaction.response.send_message(embed=embed)
     
 
 if __name__ == '__main__':
