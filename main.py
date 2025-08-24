@@ -36,7 +36,7 @@ class Track():
 async def on_ready():
     try:
         synced = await bot.tree.sync()
-        # print(f"Синхронизировано {len(synced)} команд")
+        print(f"Синхронизировано {len(synced)} команд")
     except Exception as e:
         print(f"Ошибка синхронизации: {e}")
 
@@ -97,6 +97,21 @@ async def play(interaction: discord.Interaction, url: str):
     except Exception as e:
         await interaction.response.send_message(f"Ошибка: {str(e)}", ephemeral=True,  delete_after=5.0)
 
+@bot.tree.command(name="queue", description="Вывод очереди")
+async def queue(interaction: discord.Interaction):
+        embed = discord.Embed(
+            title = "**Очередь**",
+        )
+        
+        queue = get_queue(interaction.guild.id)
+        for i in range(len(queue)):
+            if i == 0:
+                embed.add_field(name="", value = f"**{i + 1}. {queue[i].channel} - {queue[i].title}**" , inline=False)
+            else:
+                embed.add_field(name="", value = f"{i + 1}. {queue[i].channel} - {queue[i].title}" , inline=False)
+
+        await interaction.response.send_message(embed=embed, ephemeral = True)
+
 
 @bot.tree.command(name="stop", description="Остановка воспроизведения и очистка очереди")
 async def stop(interaction: discord.Interaction):
@@ -112,7 +127,7 @@ async def stop(interaction: discord.Interaction):
 
     
 @bot.tree.command(name="pause", description="Пауза/снятие с паузы")
-async def start(interaction: discord.Interaction):
+async def pause(interaction: discord.Interaction):
     
     if not interaction.user.voice:
         await interaction.response.send_message("Вы не в голосовом канале!", ephemeral=True, delete_after=5.0)
@@ -140,7 +155,7 @@ async def start(interaction: discord.Interaction):
 
 
 @bot.tree.command(name="leave", description="Выход из голосового чата")
-async def stop(interaction: discord.Interaction):
+async def leave(interaction: discord.Interaction):
     voice_client = interaction.guild.voice_client
     if voice_client:
         voice_client.stop()
@@ -151,7 +166,7 @@ async def stop(interaction: discord.Interaction):
                                                 
     
 @bot.tree.command(name="info", description="Техническая информация о боте")
-async def start(interaction: discord.Interaction):
+async def info(interaction: discord.Interaction):
     await interaction.response.send_message("Привет!\n" \
                    "Я бот для музыки из ВК!")
     
