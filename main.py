@@ -94,7 +94,7 @@ async def play(interaction: discord.Interaction, url: str):
             )
             
             embed.set_author(name="Плэйлист добавлен!")
-            embed.add_field(name="Количество трэкоов", value = f"{track['playlist_count']}" , inline=False)
+            embed.add_field(name="Количество трэков", value = f"{track['playlist_count']}" , inline=False)
             embed.set_thumbnail(url = track['thumbnail'])
 
         await interaction.followup.send(embed=embed)
@@ -138,7 +138,7 @@ async def queue(interaction: discord.Interaction):
     )
     
     queue = get_queue(interaction.guild.id)
-    for i in range(min(len(queue) - 1, 25), -1, -1):
+    for i in range(len(queue) - 1, len(queue) - 26, -1):
         if i == len(queue) - 1:
             embed.add_field(name="", value = f"**{len(queue) - i}. {queue[i].channel} - {queue[i].title}**" , inline=False)
         else:
